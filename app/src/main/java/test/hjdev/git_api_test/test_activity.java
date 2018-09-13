@@ -28,7 +28,46 @@ public class test_activity extends Activity{
         setContentView( R.layout.recycle_list_item );
         super.onCreate( savedInstanceState );
         drawItem();
+        setData();
         mHandler = new ToastMessageHandler();
+    }
+    void setData() {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url("https://api.github.com/users/jakewharton/repos")
+                .build();
+        new Thread(  ){
+            @Override
+            public void run() {
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, final Response response) throws IOException {
+                        // ... check for failure using `isSuccessful` before proceeding
+
+                        // Read data on the worker thread
+                        final String responseData = response.body().string();
+
+                        // Run view-related code back on the main thread
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //TextView myTextView = (TextView) findViewById(R.id.myTextView);
+                                mTitleText.setText(responseData);
+                            }
+                        });
+                    }
+                });
+
+            }
+        }.start();;
+
+        // Response response = client.newCall(request).execute();
+
     }
     void drawItem(){
         mTitleText = (TextView) findViewById( R.id.twTitle );
@@ -37,34 +76,7 @@ public class test_activity extends Activity{
         mAvatarImg = (ImageView) findViewById( R.id.ivAvartar );
 
 
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url("https://api.github.com/users/jakewharton/repos")
-                .build();
-      // Response response = client.newCall(request).execute();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
 
-            }
-
-            @Override
-            public void onResponse(Call call, final Response response) throws IOException {
-                // ... check for failure using `isSuccessful` before proceeding
-
-                // Read data on the worker thread
-                final String responseData = response.body().string();
-
-                // Run view-related code back on the main thread
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //TextView myTextView = (TextView) findViewById(R.id.myTextView);
-                        mTitleText.setText(responseData);
-                    }
-                });
-            }
-        });
     }
     private class AppTask extends AsyncTask<String, Void, Void> {
 
